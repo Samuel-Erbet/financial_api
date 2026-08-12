@@ -1,7 +1,7 @@
 package com.example.financial_api.demo.repository;
 
-import com.example.financial_api.demo.entity.Transaction;
-import com.example.financial_api.demo.entity.Type;
+import com.example.financial_api.demo.entity.transaction.Transaction;
+import com.example.financial_api.demo.entity.transaction.Type;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 import java.util.List;

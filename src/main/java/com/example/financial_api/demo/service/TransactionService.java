@@ -1,14 +1,14 @@
 package com.example.financial_api.demo.service;
 
-import com.example.financial_api.demo.entity.Transaction;
-import com.example.financial_api.demo.entity.Type;
-import com.example.financial_api.demo.entity.User;
+import com.example.financial_api.demo.entity.transaction.SummaryDTO;
+import com.example.financial_api.demo.entity.transaction.Transaction;
+import com.example.financial_api.demo.entity.transaction.Type;
+import com.example.financial_api.demo.entity.user.User;
 import com.example.financial_api.demo.repository.TransactionRepository;
 import com.example.financial_api.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -24,36 +24,30 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-
-
-    // tenho que testar, mas deve criar uma transação
-
-    @PostMapping("/saveTransactions")
-    public Transaction createTransaction(
+    //CRIA UMA TRANSAÇÃO
+    public Transaction createTransaction (
             LocalDate date,
             String description,
             Double amount,
             User user,
             Type type
     ){
+
         Transaction transaction = new Transaction(date, description, amount, user, type);
-        return transaction;
+
+        return transactionRepository.save(transaction);
     }
 
     // VAI LISTAR TODAS TRANSAÇÕES
-    @GetMapping("/transactions")
-    public List<Transaction> listTransactions(@RequestParam("id")Long id){
-        List<Transaction> transactions = new ArrayList<>();
-        transactions.add((Transaction) transactionRepository.findByUserId(id));
-        return transactions;
+    public List<Transaction> listTransactions(Long id){
+        return transactionRepository.findByUserId(id);
     }
 
     // VAI LISTAR TODAS TRANSAÇÕES POR MÊS
-    @GetMapping("/filterTransactions")
     public List<Transaction> filterTransactionsByMonth(
-            @RequestParam Long userId,
-            @RequestParam int year,
-            @RequestParam int month
+            Long userId,
+            int year,
+            int month
     ){
 
         YearMonth date = YearMonth.of(year,month);
@@ -63,63 +57,79 @@ public class TransactionService {
         return transactionRepository.findByUserIdAndDateBetween(userId,firstDay,lastDay);
     }
 
-    @DeleteMapping("/{id}")
-    public String deleteTransaction(@PathVariable("id") Long id){
+    // VAI DELETEAR A TRANSAÇÃO BASEADA NO ID DELA
+    public String deleteTransaction(Long id){
         transactionRepository.deleteById(id);
         return "Transaction id: "+id+" has been deleted.";
     }
 
-    @GetMapping("/filterType")
+    // VAI FILTRAR AS TRANSAÇÕES PELO TIPO DELA
     public List<Transaction> filterTransactionsByType(
-            @RequestParam Long userId, 
-            @RequestParam Type type
+            Long userId,
+            Type type
     ) {
         return transactionRepository.findByUserIdAndType(userId,type);
     }
 
+    // VAI ALTERAR A TRANSAÇÃO PELO ID DELA
     public Transaction changeTransaction(
-           @PathVariable("id") Long id,
-           @RequestBody Transaction transaction
+            Long id,
+            Transaction transaction,
+            Long userId
     ) {
-        Optional<Transaction> newTransaction = transactionRepository.findById(id);
-        newTransaction.get().setAmount(transaction.getAmount());
-        newTransaction.get().setCreatedAt(LocalDate.now());
-        newTransaction.get().setDate(transaction.getDate());
-        newTransaction.get().setDescription(transaction.getDescription());
-        newTransaction.get().setType(transaction.getType());
+       Transaction newTransaction = transactionRepository.findById(id)
+               .orElseThrow(() ->new RuntimeException("Transaction not found"));
 
-        return newTransaction.orElse(null);
+
+        if(!newTransaction.getUser().getId().equals(userId)){
+            throw new RuntimeException("Transaction not found");
+        }
+
+        newTransaction.setAmount(transaction.getAmount());
+        newTransaction.setCreatedAt(LocalDate.now());
+        newTransaction.setDate(transaction.getDate());
+        newTransaction.setDescription(transaction.getDescription());
+        newTransaction.setType(transaction.getType());
+
+        return transactionRepository.save(newTransaction);
     }
 
-
-    @GetMapping("/transactions/summary")
-    public List monthSummary(
-            @RequestParam Long userId,
-            @RequestParam int year,
-            @RequestParam int month
+    // VAI RETORNAR INFORMAÇÕES SOBRE AS COMPRAS DO MÊS QUE O USUÁRIO ESCOLHER
+    public SummaryDTO monthSummary(
+            Long userId,
+            int year,
+            int month
     ){
+
+        // vai guardar todas as transações do mes
         List<Transaction> transactions;
 
+        // aqui são as variáveis que guardarão as informações a serem retornadas
         Double totalIncome = 0.0;
         Double totalExpense = 0.0;
-        Double balance = 0.0;
+        double balance = 0.0;
         int transactionCount = 0;
         Double biggestTransaction = 0.0;
         Double averageTransaction = 0.0;
 
+        SummaryDTO summary = new SummaryDTO();
+
+
+        // vai pegar o valor do mês com base no ultimo e primeiro dia
         YearMonth date = YearMonth.of(year, month);
         LocalDate firstDay = date.atDay(1);
         LocalDate lastDay = date.atEndOfMonth();
 
         transactions = transactionRepository.findByUserIdAndDateBetween(userId, firstDay, lastDay);
 
-        // o erro ta aqui
         if (transactions.isEmpty()){
-            System.out.println("error empty summary");
+
+            return summary;
         } else {
+            // aqui vai ser contado as transações, em quantidade e valores
             for (Transaction t : transactions) {
                 transactionCount += 1;
-                System.out.println(transactionCount);
+
                 if (t.getType().equals(Type.EXPENSE)) {
                     totalExpense += t.getAmount();
                 } else {
@@ -129,16 +139,25 @@ public class TransactionService {
                 if (t.getAmount() > biggestTransaction) {
                     biggestTransaction = t.getAmount();
                 }
-
             }
+            // média de transações
             averageTransaction = totalExpense / transactionCount;
+
+            // saldo
             balance = totalIncome - totalExpense;
+
         }
+        summary.setAverageTransaction(averageTransaction);
+        summary.setBalance(balance);
+        summary.setBiggestTransaction(biggestTransaction);
+        summary.setTotalExpense(totalExpense);
+        summary.setTotalIncome(totalIncome);
+        summary.setTransactionCount(transactionCount);
 
-        List result = new ArrayList<>();
-
-        return result;
+        return summary;
     }
+
+
 
 
 }

@@ -1,7 +1,12 @@
 package com.example.financial_api.demo.repository;
 
-import com.example.financial_api.demo.entity.User;
+import com.example.financial_api.demo.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User,Long> {
+
+    Optional<User> findByEmail(String username);
 }

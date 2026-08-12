@@ -1,10 +1,14 @@
 package com.example.financial_api.demo.controller;
 
-import com.example.financial_api.demo.entity.Transaction;
-import com.example.financial_api.demo.entity.Type;
+import com.example.financial_api.demo.entity.transaction.SummaryDTO;
+import com.example.financial_api.demo.entity.transaction.Transaction;
+import com.example.financial_api.demo.entity.transaction.Type;
+import com.example.financial_api.demo.entity.user.User;
 import com.example.financial_api.demo.repository.TransactionRepository;
 import com.example.financial_api.demo.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -20,65 +24,75 @@ public class TransactionController {
     @Autowired
     TransactionRepository transactionRepository;
 
-    // ESSA ROTA  VAI CRIAR A TRANSAÇÃO
     @PostMapping
-    public Transaction createTransaction(@RequestBody Transaction transaction){
-        transactionRepository.save(transactionService.createTransaction(
+    public Transaction createTransaction(@RequestBody Transaction transaction, @AuthenticationPrincipal User user){
+        return transactionService.createTransaction(
                 transaction.getDate(),
                 transaction.getDescription(),
                 transaction.getAmount(),
-                transaction.getUser(),
+                user,
                 transaction.getType()
-                )
         );
-        return transaction;
     }
 
-    // ESSA ROTA  VAI LISTAR TODAS AS TRANSAÇÕES
+
+
     @GetMapping
-    public List<Transaction> listTransactions(@RequestParam Long id){
-        return transactionService.listTransactions(id);
+    public List<Transaction> listTransactions(@AuthenticationPrincipal User userId){
+        return transactionService.listTransactions(userId.getId());
     }
 
-    // ESSA ROTA  VAI FILTRAR TODAS TRANSAÇÕES POR MES
+
+
     @GetMapping("/filterMonth")
     public List<Transaction> filterTransactionsByMonth(
             @RequestParam int year,
             @RequestParam int month,
-            @RequestParam Long userId
+            @AuthenticationPrincipal User userId
     ){
-        return transactionService.filterTransactionsByMonth(userId, year, month);
+        return transactionService.filterTransactionsByMonth(userId.getId(), year, month);
     }
 
-    // ESSA ROTA VAI FILTRAR POR TIPO
+
+
     @GetMapping("/filterType")
     public List<Transaction> filterTransactionByType(
-            @RequestParam Long userId,
+            @AuthenticationPrincipal User userId,
             @RequestParam(required = false) Type type
     ){
-        return transactionService.filterTransactionsByType(userId, type);
+        return transactionService.filterTransactionsByType(userId.getId(), type);
     }
 
-    // ESSA ROTA VAI DELETAR
+
+
     @DeleteMapping("/{id}")
-    public void deleteTransaction(@PathVariable Long id){
-        transactionService.deleteTransaction(id);
+    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id, @AuthenticationPrincipal User user){
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("transaction not found"));
+
+        if(!transaction.getUser().getId().equals(user.getId())) {
+            ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
     public List<Transaction> changeTransaction(
             @PathVariable Long id,
-            @RequestBody Transaction transaction
+            @RequestBody Transaction transaction,
+            @AuthenticationPrincipal User userId
     ){
-        return Collections.singletonList(transactionService.changeTransaction(id, transaction));
+        return Collections.singletonList(transactionService.changeTransaction(id, transaction, userId.getId()));
     }
 
+
+
     @GetMapping("/summary")
-    public List<Transaction> summary(
+    public SummaryDTO summary(
             @RequestParam int year,
             @RequestParam int month,
-            @RequestParam Long userId
+            @AuthenticationPrincipal User userId
     ){
-        return transactionService.monthSummary(userId, year, month);
+        return transactionService.monthSummary(userId.getId(), year, month);
     }
 }

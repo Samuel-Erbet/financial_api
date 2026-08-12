@@ -1,10 +1,11 @@
-package com.example.financial_api.demo.entity;
+package com.example.financial_api.demo.entity.transaction;
 
+import com.example.financial_api.demo.entity.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 @Table
@@ -13,19 +14,16 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-
     private LocalDate date;
-
     private String description;
-
     private Double amount;
 
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     private User user;
 
     private Type type;
 
-    @UpdateTimestamp
+    @CreationTimestamp
     private LocalDate createdAt;
 
     public Transaction(LocalDate date, String description, Double amount, User user, Type type) {
