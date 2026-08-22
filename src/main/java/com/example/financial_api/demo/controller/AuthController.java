@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@RestControllerAdvice
 public class AuthController {
 
     private final JwtService jwtService;
@@ -42,12 +41,17 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<UserResponseDTO> signup(@RequestBody RegisterUserDTO data){
+        if(userRepository.findByEmail(data.getEmail()).isPresent())
+            return ResponseEntity.status(409).build();
+
         User registeredUSer = authService.signup(data);
 
-        return ResponseEntity.ok(new UserResponseDTO(
+        return ResponseEntity.ok(
+                new UserResponseDTO(
                 registeredUSer.getId(),
-                registeredUSer.getUsername(),
-                registeredUSer.getEmail())
+                registeredUSer.getName(),
+                registeredUSer.getEmail()
+                )
         );
     }
 }

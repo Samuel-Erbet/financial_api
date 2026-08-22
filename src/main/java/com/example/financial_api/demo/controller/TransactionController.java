@@ -37,7 +37,7 @@ public class TransactionController {
 
 
 
-    @GetMapping
+    @GetMapping("/list")
     public List<Transaction> listTransactions(@AuthenticationPrincipal User userId){
         return transactionService.listTransactions(userId.getId());
     }
@@ -66,23 +66,17 @@ public class TransactionController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id, @AuthenticationPrincipal User user){
-        Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("transaction not found"));
-
-        if(!transaction.getUser().getId().equals(user.getId())) {
-            ResponseEntity.status(403).build();
-        }
-        return ResponseEntity.noContent().build();
+    public ResponseEntity deleteTransaction(@PathVariable Long id, @AuthenticationPrincipal User user){
+        return transactionService.deleteTransaction(id, user);
     }
 
     @PutMapping("/{id}")
-    public List<Transaction> changeTransaction(
+    public Transaction changeTransaction(
             @PathVariable Long id,
             @RequestBody Transaction transaction,
             @AuthenticationPrincipal User userId
     ){
-        return Collections.singletonList(transactionService.changeTransaction(id, transaction, userId.getId()));
+        return transactionService.updateTransaction(id, transaction, userId.getId());
     }
 
 

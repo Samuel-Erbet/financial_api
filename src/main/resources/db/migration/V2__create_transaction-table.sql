@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS transactions (
+CREATE TABLE IF NOT EXISTS transaction (
     id BIGINT NOT NULL AUTO_INCREMENT,
     date DATE NOT NULL,
     description VARCHAR(255) NOT NULL,

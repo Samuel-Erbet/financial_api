@@ -23,8 +23,6 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     implementation 'org.flywaydb:flyway-mysql:10.11.1'
 
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-    implementation 'com.auth0:auth0-springboot-api:1.0.0-beta.0'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'

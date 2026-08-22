@@ -18,7 +18,7 @@ public class Transaction {
     private String description;
     private Double amount;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne(cascade = CascadeType.MERGE)
     private User user;
 
     private Type type;

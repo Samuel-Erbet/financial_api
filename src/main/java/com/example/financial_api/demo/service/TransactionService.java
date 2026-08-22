@@ -7,13 +7,12 @@ import com.example.financial_api.demo.entity.user.User;
 import com.example.financial_api.demo.repository.TransactionRepository;
 import com.example.financial_api.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TransactionService {
@@ -58,10 +57,17 @@ public class TransactionService {
     }
 
     // VAI DELETEAR A TRANSAÇÃO BASEADA NO ID DELA
-    public String deleteTransaction(Long id){
-        transactionRepository.deleteById(id);
-        return "Transaction id: "+id+" has been deleted.";
+    public ResponseEntity deleteTransaction(Long transactionId, User userId){
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("transaction not found"));
+
+        if(!transaction.getUser().getId().equals(userId.getId())) {
+            return ResponseEntity.status(403).build();
+        }
+        transactionRepository.delete(transaction);
+        return ResponseEntity.noContent().build();
     }
+
 
     // VAI FILTRAR AS TRANSAÇÕES PELO TIPO DELA
     public List<Transaction> filterTransactionsByType(
@@ -72,14 +78,16 @@ public class TransactionService {
     }
 
     // VAI ALTERAR A TRANSAÇÃO PELO ID DELA
-    public Transaction changeTransaction(
+    public Transaction updateTransaction(
             Long id,
             Transaction transaction,
             Long userId
     ) {
+
        Transaction newTransaction = transactionRepository.findById(id)
                .orElseThrow(() ->new RuntimeException("Transaction not found"));
 
+       System.out.println(newTransaction);
 
         if(!newTransaction.getUser().getId().equals(userId)){
             throw new RuntimeException("Transaction not found");
@@ -128,7 +136,9 @@ public class TransactionService {
         } else {
             // aqui vai ser contado as transações, em quantidade e valores
             for (Transaction t : transactions) {
-                transactionCount += 1;
+                if (t.getType().equals("EXPENSE")){
+                    transactionCount += 1;
+                }
 
                 if (t.getType().equals(Type.EXPENSE)) {
                     totalExpense += t.getAmount();
