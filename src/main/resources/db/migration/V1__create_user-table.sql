@@ -1,8 +1,9 @@
-create table if not exists user(
-     id bigint not null auto_increment,
-     name varchar(100) not null,
-     email varchar(100) not null,
-     password varchar(100)  not null,
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-
+CREATE TABLE IF NOT EXISTS `user` (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    created_at DATE DEFAULT (CURRENT_DATE),
+    PRIMARY KEY (id),
+    CONSTRAINT uk_user_email UNIQUE (email)
 );

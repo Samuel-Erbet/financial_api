@@ -8,9 +8,11 @@ import com.example.financial_api.demo.entity.user.UserResponseDTO;
 import com.example.financial_api.demo.repository.UserRepository;
 import com.example.financial_api.demo.service.AuthService;
 import com.example.financial_api.demo.service.JwtService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequestMapping("/auth")
@@ -20,15 +22,15 @@ public class AuthController {
     private final AuthService authService;
     private final UserRepository userRepository;
 
-    public AuthController(JwtService jwtService, AuthService authService, UserRepository userRepository) {
+    public AuthController(
+            JwtService jwtService, AuthService authService, UserRepository userRepository) {
         this.jwtService = jwtService;
         this.authService = authService;
         this.userRepository = userRepository;
     }
 
-
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> Login(@RequestBody LoginUserDTO loginUserDTO){
+    public ResponseEntity<LoginResponse> Login(@Valid @RequestBody LoginUserDTO loginUserDTO) {
         User authenticatedUser = authService.authenticate(loginUserDTO);
         String jwtToken = jwtService.generateToken(authenticatedUser);
 
@@ -40,18 +42,14 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<UserResponseDTO> signup(@RequestBody RegisterUserDTO data){
-        if(userRepository.findByEmail(data.getEmail()).isPresent())
-            return ResponseEntity.status(409).build();
+    public ResponseEntity<UserResponseDTO> signup(@Valid @RequestBody RegisterUserDTO data) {
 
         User registeredUSer = authService.signup(data);
 
         return ResponseEntity.ok(
                 new UserResponseDTO(
-                registeredUSer.getId(),
-                registeredUSer.getName(),
-                registeredUSer.getEmail()
-                )
-        );
+                        registeredUSer.getId(),
+                        registeredUSer.getName(),
+                        registeredUSer.getEmail()));
     }
 }

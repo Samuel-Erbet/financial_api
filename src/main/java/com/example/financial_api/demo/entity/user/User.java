@@ -1,10 +1,14 @@
 package com.example.financial_api.demo.entity.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -15,18 +19,21 @@ import java.util.List;
 public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(length = 100, nullable = false)
     private String name;
-    @Column(unique = true, nullable = false)
+
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
+
+    @Column(length = 100, nullable = false)
     private String password;
 
-    @CreationTimestamp
-    private LocalDate createdAt;
+    @CreationTimestamp private LocalDate createdAt;
 
-    public User() {
-    }
+    public User() {}
 
     public User(String name, String email, String password) {
         this.name = name;
@@ -70,13 +77,13 @@ public class User implements UserDetails {
         this.createdAt = createdAt;
     }
 
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
     }
 
     @Override
+    @JsonIgnore
     public @Nullable String getPassword() {
         return password;
     }

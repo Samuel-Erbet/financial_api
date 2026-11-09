@@ -1,14 +1,23 @@
 package com.example.financial_api.demo.entity.user;
 
+import jakarta.validation.constraints.*;
+
 public class RegisterUserDTO {
 
+    @NotBlank
+    @Size(max = 100)
     private String name;
+
+    @NotBlank
+    @Email
+    @Size(max = 100)
     private String email;
+
+    @NotBlank
+    @Size(max = 72)
     private String password;
 
-    public RegisterUserDTO() {
-
-    }
+    public RegisterUserDTO() {}
 
     public RegisterUserDTO(String name, String email, String password) {
         this.name = name;
